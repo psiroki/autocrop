@@ -150,6 +150,8 @@ function isFilled(arr, ref, p) {
 	return true;
 }
 
+var borderWidth = document.getElementById("borderWidth");
+
 function generate(f, exif) {
 	if(this === background && background.files.length > 0) {
 		var bgf = background.files[0];
@@ -242,14 +244,21 @@ function generate(f, exif) {
 					break;
 			}
 			
-			console.log(maxX, minX);
 			++maxX;
 			++maxY;
+			var bw = +borderWidth.value;
 			if(maxX < minX && maxY < minY) {
-				canvas.width = minX-maxX;
-				canvas.height = minY-maxY;
+				canvas.width = minX-maxX+bw*2;
+				canvas.height = minY-maxY+bw*2;
 				
-				ctx.putImageData(imgData, -maxX, -maxY);
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				if(bw > 0 && ref[3] > 0) {
+					var fill = Array.from(ref);
+					fill[3] *= 1.0/255.0;
+					ctx.fillStyle = "rgba("+fill.join(", ")+")";
+					ctx.fillRect(0, 0, canvas.width, canvas.height);
+				}
+				ctx.putImageData(imgData, -maxX+bw, -maxY+bw);
 			}
 			Array.prototype.slice.call(ownBar.querySelectorAll(".saveJpgButton"))
 				.forEach(function(e) {
