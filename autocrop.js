@@ -149,16 +149,21 @@ function scaleImage(img, tw, th) {
 	return canvas;
 }
 
-function isFilled(arr, ref, p) {
-	if(typeof p !== "number")
-		p = ref.length;
+function isFilled(arr, ref, pitch, refWidth, refPitch) {
+	if(typeof pitch !== "number")
+		pitch = ref.length;
+	if(typeof refPitch !== "number")
+		refPitch = 0;
+	if(typeof refWidth !== "number")
+		refWidth = ref.length;
 	var l = arr.length;
-	var rl = ref.length;
-	for(var c=0; c<l; c += p) {
-		for(var i=0; i<rl; ++i) {
-			if(arr[c+i] != ref[i])
+	var refOffset = 0;
+	for(var c=0; c<l; c += pitch) {
+		for(var i=0; i<refWidth; ++i) {
+			if(arr[c+i] != ref[refOffset+i])
 				return false;
 		}
+		refOffset += refPitch;
 	}
 	return true;
 }
@@ -195,10 +200,10 @@ function generate(f, exif) {
 			var maxDim = Math.max(w, h);
 			canvas.width = w;
 			canvas.height = h;
-			var div = viewTemplate.cloneNode(true);
-			var ownBar = div.querySelector(".snackBar");
-			div.querySelector(".canvasHolder").appendChild(canvas);
-			document.body.appendChild(div);
+			var panel = viewTemplate.cloneNode(true);
+			var ownBar = panel.querySelector(".snackBar");
+			panel.querySelector(".canvasHolder").appendChild(canvas);
+			document.body.appendChild(panel);
 			var ctx = canvas.getContext("2d");
 			ctx.save();
 			if(o >= 1) {
@@ -296,11 +301,8 @@ function generate(f, exif) {
 			Array.from(ownBar.querySelectorAll(".closeButton"))
 				.forEach(function(e) {
 					e.addEventListener("click", function() {
-						if(ownBar.parentNode) {
-							var p = ownBar.parentNode.parentNode;
-							if(p) {
-								p.removeChild(ownBar.parentNode);
-							}
+						if(panel.parentNode) {
+							panel.parentNode.removeChild(panel);
 						}
 					});
 				});
