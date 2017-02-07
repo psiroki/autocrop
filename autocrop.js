@@ -30,20 +30,33 @@ function getExif(blob, cb) {
 	exif.postMessage({ id: id, blob: blob });
 }
 
+function bindValues(input, output, formatter) {
+	var prefix = output.getAttribute("data-prefix") || "";
+	if(!formatter)
+		formatter = value => value;
+	var sync = () => {
+		output.value = prefix+formatter(input.value);
+	};
+	input.addEventListener("input", sync);
+	sync();
+}
+
 function enclose(img, size) {
-	var w = img.naturalWidth;
-	var h = img.naturalHeight;
+	var iw = img.naturalWidth || img.width;
+	var ih = img.naturalHeight || img.height;
+	var w = iw;
+	var h = ih;
 	if(typeof size === "number") {
 		if(w > size) {
 			w = size;
-			h = img.naturalHeight/img.naturalWidth*w;
+			h = ih/iw*w;
 		}
 		if(h > size) {
 			h = size;
-			w = img.naturalWidth/img.naturalHeight*h;
+			w = iw/ih*h;
 		}
 	}
-	
+
 	return { w: w, h: h };
 }
 
@@ -74,8 +87,8 @@ function dataURLToBlob(dataURL) {
 function scaleImage(img, tw, th) {
 	tw |= 0;
 	th |= 0;
-	var sw = img.naturalWidth;
-	var sh = img.naturalHeight;
+	var sw = img.naturalWidth || img.width;
+	var sh = img.naturalHeight || img.height;
 	var canvas = document.createElement("canvas");
 	canvas.width = sw;
 	canvas.height = sh;
@@ -114,20 +127,20 @@ function scaleImage(img, tw, th) {
 					target[trgLine+tx*4+c] = targetLine[tx*4+c]/sampleCount[tx];
 				}
 			}
-			
+
 			for(var tx=0; tx<tw; ++tx) {
 				for(var c=0; c<4; ++c) {
 					targetLine[tx*4+c] = 0;
 				}
 				sampleCount[tx] = 0;
 			}
-						
+
 			tyc -= sh;
 			trgLine += tw*4;
 			++ty;
 		}
 	}
-	
+
 	canvas.width = tw;
 	canvas.height = th;
 	ctx.clearRect(0, 0, tw, th);
@@ -157,7 +170,7 @@ function generate(f, exif) {
 		var bgf = background.files[0];
 		return generate(bgf);
 	}
-	
+
 	if(f instanceof Blob) {
 		if(arguments.length <= 1) {
 			getExif(f, function(exif) {
@@ -169,7 +182,7 @@ function generate(f, exif) {
 		document.body.classList.add("busy");
 		var fn = f.name.replace(/^(?:.*[\\\/])?([^\\\/]+)\.[^.]+$/, "$1");
 		var img = new Image();
-		img.onload = function() {
+		var cropImage = function(img) {
 			var o = exif && typeof exif.Orientation === "number" ? exif.Orientation : 0;
 			var s = enclose(img);
 			var w = s.w;
@@ -220,14 +233,14 @@ function generate(f, exif) {
 					break;
 				offset += imgData.width*4;
 			}
-			
+
 			for(var x=0; x<imgData.width; ++x) {
 				if(isFilled(pixels.subarray(x*4, pixels.length), ref, imgData.width*4))
 					maxX = x;
 				else
 					break;
 			}
-			
+
 			offset = imgData.width*imgData.height*4;
 			for(var y=imgData.height-1; y>=0; --y) {
 				offset -= imgData.width*4;
@@ -236,21 +249,21 @@ function generate(f, exif) {
 				else
 					break;
 			}
-			
+
 			for(var x=imgData.width-1; x>=0; --x) {
 				if(isFilled(pixels.subarray(x*4, pixels.length), ref, imgData.width*4))
 					minX = x;
 				else
 					break;
 			}
-			
+
 			++maxX;
 			++maxY;
 			var bw = +borderWidth.value;
 			if(maxX < minX && maxY < minY) {
 				canvas.width = minX-maxX+bw*2;
 				canvas.height = minY-maxY+bw*2;
-				
+
 				ctx.clearRect(0, 0, canvas.width, canvas.height);
 				if(bw > 0 && ref[3] > 0) {
 					var fill = Array.from(ref);
@@ -260,19 +273,27 @@ function generate(f, exif) {
 				}
 				ctx.putImageData(imgData, -maxX+bw, -maxY+bw);
 			}
-			Array.prototype.slice.call(ownBar.querySelectorAll(".saveJpgButton"))
+			var saveJpgButton = ownBar.querySelector(".saveJpgButton");
+			var qualityOutput = ownBar.querySelector(".jpgQualityNum");
+			var qualityInput = ownBar.querySelector(".jpgQuality");
+			if(saveJpgButton) {
+				qualityOutput.style.lineHeight = saveJpgButton.offsetHeight+"px";
+			}
+			bindValues(qualityInput, qualityOutput,
+				e => { var s = String(e); return "\u2007".repeat(3).substring(s.length)+s; })
+			Array.from(ownBar.querySelectorAll(".saveJpgButton"))
 				.forEach(function(e) {
 					e.addEventListener("click", function() {
-						saveAsJPG(canvas, fn);
+						saveAsJPG(canvas, fn, parseFloat(qualityInput.value)/100);
 					});
 				});
-			Array.prototype.slice.call(ownBar.querySelectorAll(".savePngButton"))
+			Array.from(ownBar.querySelectorAll(".savePngButton"))
 				.forEach(function(e) {
 					e.addEventListener("click", function() {
 						saveAsPNG(canvas, fn);
 					});
 				});
-			Array.prototype.slice.call(ownBar.querySelectorAll(".closeButton"))
+			Array.from(ownBar.querySelectorAll(".closeButton"))
 				.forEach(function(e) {
 					e.addEventListener("click", function() {
 						if(ownBar.parentNode) {
@@ -283,8 +304,15 @@ function generate(f, exif) {
 						}
 					});
 				});
+			Array.from(ownBar.querySelectorAll(".recropButton"))
+				.forEach(function(e) {
+					e.addEventListener("click", function() {
+						cropImage(canvas);
+					});
+				});
 			document.body.classList.remove("busy");
 		};
+		img.onload = cropImage.bind(this, img);
 		var reader = new FileReader();
 		reader.onload = function() {
 			img.src = this.result;
@@ -293,8 +321,8 @@ function generate(f, exif) {
 	}
 }
 
-function saveAsJPG(canvas, filename) {
-	return save(canvas, filename+".jpg", "image/jpeg", 0.75);
+function saveAsJPG(canvas, filename, quality) {
+	return save(canvas, filename+".jpg", "image/jpeg", quality || 0.75);
 }
 
 function saveAsPNG(canvas, filename) {
@@ -310,7 +338,7 @@ function save(canvas, filename, format, quality) {
 		a.click();
 		DOMURL.revokeObjectURL(blobUrl);
 	}
-	
+
 	if(typeof canvas.toBlob === "function") {
 		try {
 			canvas.toBlob(handleBlob, format, quality);
@@ -376,3 +404,10 @@ window.addEventListener("DOMContentLoaded", function() {
 		this.classList.remove("dragOver");
 	}, false);
 });
+var offset = 1;
+var offsetExp = Math.exp(offset);
+var scale = (Math.log(64+offsetExp)-offset)/512;
+bindValues(document.querySelector("#borderWidth"), document.querySelector("#borderWidthRange"),
+	e => Math.round((Math.log(+e+offsetExp)-offset)/scale));
+bindValues(document.querySelector("#borderWidthRange"), document.querySelector("#borderWidth"),
+	e => Math.round(Math.exp(+e*scale+offset)-offsetExp));

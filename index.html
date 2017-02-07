@@ -7,16 +7,21 @@
 </head>
 <body>
 <input type="file" id="background" accept="image/*"/>
-Add border of <input type="number"
-id="borderWidth" value="0"/> pixels on each side
+<span class="borderPanel"><span>Add border of <input type="number"
+id="borderWidth" value="0"/> pixels on each side</span><span class="rangeBlock">
+<input type="range" id="borderWidthRange" value="0" min="0" max="512"/>
+</span></span>
 <div style="display: none">
 <div class="view">
 	<div class="card">
 		<div class="canvasHolder">
 		</div>
 		<div class="snackBar">
-			<button type="button" class="saveJpgButton">Save as JPG</button>
+			<button type="button" class="recropButton">Recrop</button>
 			<button type="button" class="savePngButton">Save as PNG</button>
+			<button type="button" class="saveJpgButton">Save as JPG</button>
+			<output class="jpgQualityNum" data-prefix="Q: "></output>
+			<input type="range" class="jpgQuality" value="70"/>
 			<button type="button" class="closeButton">Close</button>
 		</div>
 	</div>

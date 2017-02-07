@@ -40,3 +40,35 @@ body {
 .busy {
 	box-shadow: 0px 0px 32px red inset;
 }
+
+.snackBar {
+	overflow: hidden;
+}
+
+.snackBar > * {
+	float: left;
+	margin-right: 4px;
+}
+
+.snackBar output {
+	line-height: 18px;
+}
+
+.snackBar > .closeButton {
+	float: right;
+	margin-right: 0px;
+	margin-left: 4px;
+}
+
+.borderPanel {
+	display: inline-block;
+	vertical-align: top;
+}
+
+.borderPanel > span {
+	display: block;
+}
+
+.borderPanel > .rangeBlock > input {
+	width: 100%;
+}
