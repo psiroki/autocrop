@@ -7,6 +7,7 @@
 </head>
 <body>
 <input type="file" id="background" accept="image/*"/>
+<label><input type="checkbox" id="disableCrop"/> Don't crop just yet</label>
 <span class="borderPanel"><span>Add border of <input type="number"
 id="borderWidth" value="0"/> pixels on each side</span><span class="rangeBlock">
 <input type="range" id="borderWidthRange" value="0" min="0" max="512"/>
@@ -15,6 +16,7 @@ id="borderWidth" value="0"/> pixels on each side</span><span class="rangeBlock">
 <div class="view">
 	<div class="card">
 		<div class="canvasHolder">
+			<span class="canvasFrame"></span>
 		</div>
 		<div class="snackBar">
 			<button type="button" class="recropButton">Recrop</button>

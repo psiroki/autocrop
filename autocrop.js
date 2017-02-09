@@ -265,6 +265,10 @@ function generate(f, exif) {
 			++maxX;
 			++maxY;
 			var bw = +borderWidth.value;
+			var lumWeights = [ 0.299, 0.587, 0.114 ].map(e => e/(255*255));
+			var brightAtBorder = Math.sqrt(lumWeights.reduce((sum, weight, index) => sum + weight*ref[index]*ref[index], 0)) > 0.5;
+			if(brightAtBorder)
+				canvas.parentNode.classList.toggle("brightAtBorder", brightAtBorder);
 			if(maxX < minX && maxY < minY) {
 				canvas.width = minX-maxX+bw*2;
 				canvas.height = minY-maxY+bw*2;
