@@ -12,17 +12,21 @@
 <label><input type="checkbox" id="allowDeviation"/> Allow deviation</label></span>
 <span class="verticalPanel combinedValuePanel"><span>Add border of <input type="number"
 id="borderWidth" value="0"/> pixels on each side</span><span class="rangeBlock"
-><input type="range" id="borderWidthRange" value="0" min="0" max="512"
+><input type="range" id="borderWidthRange" value="0" min="0" max="4096"
 /></span></span>
 <span class="verticalPanel combinedValuePanel"><span>Allow difference of <input type="number"
 id="differenceDelta" value="0"/> in the pixel values</span><span class="rangeBlock"
-><input type="range" id="differenceDeltaRange" value="0" min="0" max="255"
+><input type="range" id="differenceDeltaRange" value="0" min="0" max="4096"
 /></span></span></div></div>
 <div style="display: none">
 <div class="view">
 	<div class="card">
 		<div class="canvasHolder"><span class="canvasFrame"></span></div>
 		<div class="snackBar">
+			<button type="button" class="eraseButton" style="display: none"><img
+				src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyB0cmFuc2Zvcm09InJvdGF0ZSgzMCAyNTYsMjU2KSI%2BPHJlY3QgZmlsbD0idHJhbnNwYXJlbnQiIHN0cm9rZS13aWR0aD0iMjQiIHg9IjE2MCIgeT0iMzIiIHdpZHRoPSIxOTIiIGhlaWdodD0iNDQ4IiByeD0iMzIiIHJ5PSIzMiIgc3Ryb2tlPSJibGFjayIvPjxyZWN0IGZpbGw9ImJsYWNrIiB4PSIxNjAiIHk9IjMyIiB3aWR0aD0iMTkyIiBoZWlnaHQ9IjIyNCIgcng9IjMyIiByeT0iMzIiLz48L2c%2BPC9zdmc%2B"
+				style="height:12px"
+			/></button>
 			<button type="button" class="recropButton">Recrop</button>
 			<button type="button" class="savePngButton">Save as PNG</button>
 			<button type="button" class="saveJpgButton">Save as JPG</button>

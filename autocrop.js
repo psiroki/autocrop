@@ -288,7 +288,7 @@ function generate(f, exif) {
 				for(var y=0; y<imgData.height; ++y) {
 					if(gradientCrop && allowDeviation && y > 0)
 						cropRef = pixels.subarray((y-1)*pitch, pixels.length);
-					if(isFilled(pixels.subarray(offset, offset+pitch), cropRef, pitch, cropRefWidth, cropRefPitch))
+					if(isFilled(pixels.subarray(offset, offset+pitch), cropRef, Math.min(cropRefWidth, pitch), cropRefWidth, cropRefPitch))
 						maxY = y;
 					else
 						break;
@@ -321,7 +321,7 @@ function generate(f, exif) {
 					if(gradientCrop && allowDeviation && y < imgData.height-1)
 						cropRef = pixels.subarray((y+1)*pitch, pixels.length);
 					offset -= pitch;
-					if(isFilled(pixels.subarray(offset, offset+pitch), cropRef, pitch, cropRefWidth, cropRefPitch))
+					if(isFilled(pixels.subarray(offset, offset+pitch), cropRef, Math.min(cropRefWidth, pitch), cropRefWidth, cropRefPitch))
 						minY = y;
 					else
 						break;

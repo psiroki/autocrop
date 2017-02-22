@@ -129,3 +129,65 @@ body {
 .combinedValuePanel > .rangeBlock > input {
 	width: 100%;
 }
+
+button.highlight {
+	box-shadow: 0px 1px 1px rgba(0,0,0,0.25),
+		0px 0px 3px 1px rgba(0, 64, 255, 1) inset;
+}
+
+button.primary {
+	box-shadow: 0px 1px 1px rgba(0,0,0,0.25),
+		0px 0px 3px 1px rgba(0, 192, 0, 1) inset;
+}
+
+button {
+	border: 1px solid #ccc;
+	box-shadow: 0px 1px 1px rgba(0,0,0,0.25);
+	background: #fff;
+	border-radius: 7px;
+	line-height: 15px;
+	color: black;
+	vertical-align: middle;
+}
+
+button.left {
+	border-radius: 7px 0px 0px 7px;
+	margin-right: -1px;
+	position: relative;
+}
+
+button.middle {
+	border-radius: 0px;
+	margin-right: -1px;
+	position: relative;
+}
+
+button.right {
+	border-radius: 0px 7px 7px 0px;
+	position: relative;
+}
+
+button:focus {
+	outline: none;
+	border-color: black;
+	z-index: 1;
+}
+
+button.dragOver {
+	box-shadow: 0px 1px 1px rgba(0,0,0,0.25),
+		inset 0px 0px 9px 2px rgba(0,0,0,0.75);
+}
+
+button:active, button.checked {
+	color: white;
+	background-image: linear-gradient(to bottom, blue, royalblue);
+	border-color: #00c;
+	z-index: 1;
+}
+
+input[type=text], input[type=number], input[type=password] {
+	vertical-align: middle;
+	border-radius: 3px;
+	border: 1px solid #ddd;
+	padding: 2px 4px;
+}
