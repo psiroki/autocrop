@@ -12,12 +12,6 @@ input[type=number] {
 }
 
 body {
-/*	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	overflow: auto;*/
 	padding: 8px;
 }
 
@@ -54,39 +48,21 @@ body {
 	bottom: 2px;
 	z-index: -1;
 	box-sizing: border-box;
-}
-
-.card .canvasHolder .canvasFrame {
-	border-radius: 2px;
-	animation: march 1s infinite linear;
 	background: linear-gradient(to right, #888, #888 50%, rgba(136, 136, 136, 0) 50%, rgba(136, 136, 136, 0)) 0px 0% repeat-x,
 		linear-gradient(to left, #888, #888 50%, rgba(136, 136, 136, 0) 50%, rgba(136, 136, 136, 0)) 0px 100% repeat-x,
 		linear-gradient(to top, #888, #888 50%, rgba(136, 136, 136, 0) 50%, rgba(136, 136, 136, 0)) 0% 0px repeat-y,
 		linear-gradient(to bottom, #888, #888 50%, rgba(136, 136, 136, 0) 50%, rgba(136, 136, 136, 0)) 100% 0px repeat-y;
   background-size: 16px 4px, 16px 4px, 4px 16px, 4px 16px;
+	border-radius: 2px;
+}
+
+.card .canvasHolder:hover .canvasFrame, .card .canvasHolder:active .canvasFrame {
+	animation: march 1s infinite linear;
 }
 
 @keyframes march {
 	from { background-position: 0px 0%, 0px 100%, 0% 0px, 100% 0px; }
 	to { background-position: 16px 0%, -16px 100%, 0% -16px, 100% 16px; }
-}
-
-@keyframes scale {
-    from { transform: scale(1.0); }
-    5% { transform: scale(1.01); }
-    10% { transform: scale(1.0); }
-    15% { transform: scale(1.01); }
-    20% { transform: scale(1.0); }
-    to { transform: scale(1.0); }
-}
-
-@keyframes dim {
-    from { opacity: 1.0; }
-    5% { opacity: 0.1; }
-    10% { opacity: 1.0; }
-    15% { opacity: 0.1; }
-    20% { opacity: 1.0; }
-    to { opacity: 1.0; }
 }
 
 .dragOver {
