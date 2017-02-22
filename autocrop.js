@@ -23,7 +23,8 @@ function collect(ids) {
 collect("background", "disableCrop",
 	"gradientCrop", "allowDeviation",
 	"borderWidth", "borderWidthRange",
-	"differenceDelta", "differenceDeltaRange");
+	"differenceDelta", "differenceDeltaRange",
+	"insertionPoint");
 
 if(exif) {
 	exif.onmessage = function(e) {
@@ -232,7 +233,10 @@ function generate(f, exif) {
 			var panel = viewTemplate.cloneNode(true);
 			var ownBar = panel.querySelector(".snackBar");
 			panel.querySelector(".canvasHolder").appendChild(canvas);
-			document.body.appendChild(panel);
+			if(!insertionPoint || !insertionPoint.parentNode)
+				document.body.appendChild(panel);
+			else
+				insertionPoint.parentNode.insertBefore(panel, insertionPoint.nextSibling);
 			var ctx = canvas.getContext("2d");
 			ctx.save();
 			if(o >= 1) {
@@ -515,10 +519,11 @@ exponentialSlider(1, 64, c.borderWidthRange, c.borderWidth);
 exponentialSlider(1, 255, c.differenceDeltaRange, c.differenceDelta);
 
 function syncDeviation() {
-	c.allowDeviation.disabled = !c.gradientCrop.checked && (+c.differenceDelta.value === 0);
+	c.allowDeviation.disabled = !c.gradientCrop.checked || (+c.differenceDelta.value === 0);
 }
 
 c.gradientCrop.addEventListener("input", syncDeviation);
+c.gradientCrop.addEventListener("change", syncDeviation);
 c.differenceDelta.addEventListener("input", syncDeviation);
 c.differenceDeltaRange.addEventListener("input", syncDeviation);
 

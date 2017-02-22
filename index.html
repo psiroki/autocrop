@@ -5,7 +5,7 @@
 <title>Autocrop image</title>
 <link rel="stylesheet" type="text/css" href="autocrop.css"/>
 </head>
-<body>
+<body><div class="settingsPanel"><div class="client">
 <span class="verticalPanel"><span><input type="file" id="background" accept="image/*"/></span>
 <label><input type="checkbox" id="disableCrop"/> Don't crop just yet</label></span>
 <span class="verticalPanel"><label><input type="checkbox" id="gradientCrop"/> Gradient crop</label>
@@ -17,7 +17,7 @@ id="borderWidth" value="0"/> pixels on each side</span><span class="rangeBlock"
 <span class="verticalPanel combinedValuePanel"><span>Allow difference of <input type="number"
 id="differenceDelta" value="0"/> in the pixel values</span><span class="rangeBlock"
 ><input type="range" id="differenceDeltaRange" value="0" min="0" max="255"
-/></span></span>
+/></span></span></div></div>
 <div style="display: none">
 <div class="view">
 	<div class="card">
@@ -33,6 +33,7 @@ id="differenceDelta" value="0"/> in the pixel values</span><span class="rangeBlo
 	</div>
 </div>
 </div>
+<div id="insertionPoint"></div>
 <script type="application/javascript" src="autocrop.js"></script>
 </body>
 </html>
