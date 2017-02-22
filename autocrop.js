@@ -10,6 +10,21 @@ var jobs = [];
 var calls = { };
 var callCounter = 0;
 
+var c = { };
+
+function collect(ids) {
+	if (!(ids instanceof Array))
+		ids = Array.from(arguments);
+	ids.forEach(function(e) {
+		c[e] = document.getElementById(e);
+	});
+}
+
+collect("background", "disableCrop",
+	"gradientCrop", "allowDeviation",
+	"borderWidth", "borderWidthRange",
+	"differenceDelta", "differenceDeltaRange");
+
 if(exif) {
 	exif.onmessage = function(e) {
 		var id = e.data.id;
@@ -149,30 +164,44 @@ function scaleImage(img, tw, th) {
 	return canvas;
 }
 
-function isFilled(arr, ref, pitch, refWidth, refPitch) {
-	if(typeof pitch !== "number")
-		pitch = ref.length;
-	if(typeof refPitch !== "number")
-		refPitch = 0;
-	if(typeof refWidth !== "number")
-		refWidth = ref.length;
-	var l = arr.length;
-	var refOffset = 0;
-	for(var c=0; c<l; c += pitch) {
-		for(var i=0; i<refWidth; ++i) {
-			if(arr[c+i] != ref[refOffset+i])
-				return false;
-		}
-		refOffset += refPitch;
-	}
-	return true;
+function strictlyEquals(a, b) {
+	return a == b;
 }
 
-var borderWidth = document.getElementById("borderWidth");
+function allowDelta(delta) {
+	return function (a, b) {
+		return Math.abs(a-b) <= delta;
+	};
+}
+
+function createFillTest(eqPred) {
+	if(typeof eqPred !== "function")
+		eqPred = strictlyEquals;
+  return function (arr, ref, pitch, refWidth, refPitch) {
+		if(typeof eqPred !== "function")
+			eqPred = strictlyEquals;
+		if(typeof pitch !== "number")
+			pitch = ref.length;
+		if(typeof refPitch !== "number")
+			refPitch = 0;
+		if(typeof refWidth !== "number")
+			refWidth = ref.length;
+		var l = arr.length;
+		var refOffset = 0;
+		for(var c=0; c<l; c += pitch) {
+			for(var i=0; i<refWidth; ++i) {
+				if(!eqPred(arr[c+i], ref[refOffset+i]))
+					return false;
+			}
+			refOffset += refPitch;
+		}
+		return true;
+	};
+}
 
 function generate(f, exif) {
-	if(this === background && background.files.length > 0) {
-		var bgf = background.files[0];
+	if(this === c.background && c.background.files.length > 0) {
+		var bgf = c.background.files[0];
 		return generate(bgf);
 	}
 
@@ -231,40 +260,102 @@ function generate(f, exif) {
 			var minX = imgData.width;
 			var minY = imgData.height;
 			var offset = 0;
-			for(var y=0; y<imgData.height; ++y) {
-				if(isFilled(pixels.subarray(offset, offset+imgData.width*4), ref, 4))
-					maxY = y;
-				else
-					break;
-				offset += imgData.width*4;
-			}
+			var pitch = imgData.width*4;
+			var doCrop = !c.disableCrop.checked;
+			var gradientCrop = c.gradientCrop.checked;
+			var allowDeviation = c.allowDeviation.checked;
+			var isFilled;
+			var differenceDelta = +c.differenceDelta.value;
+			if(differenceDelta > 0)
+				isFilled = createFillTest(allowDelta(differenceDelta));
+			else
+				isFilled = createFillTest();
+			if(doCrop) {
+				var cropRef = ref;
+				var cropRefWidth = cropRef.length;
+				var cropRefPitch = 0;
 
-			for(var x=0; x<imgData.width; ++x) {
-				if(isFilled(pixels.subarray(x*4, pixels.length), ref, imgData.width*4))
-					maxX = x;
-				else
-					break;
-			}
+				if(gradientCrop) {
+					cropRef = pixels;
+					cropRefWidth = imgData.width*4;
+					cropRefPitch = 0;
+				}
 
-			offset = imgData.width*imgData.height*4;
-			for(var y=imgData.height-1; y>=0; --y) {
-				offset -= imgData.width*4;
-				if(isFilled(pixels.subarray(offset, offset+imgData.width*4), ref, 4))
-					minY = y;
-				else
-					break;
-			}
+				for(var y=0; y<imgData.height; ++y) {
+					if(gradientCrop && allowDeviation && y > 0)
+						cropRef = pixels.subarray((y-1)*pitch, pixels.length);
+					if(isFilled(pixels.subarray(offset, offset+pitch), cropRef, pitch, cropRefWidth, cropRefPitch))
+						maxY = y;
+					else
+						break;
+					offset += pitch;
+				}
 
-			for(var x=imgData.width-1; x>=0; --x) {
-				if(isFilled(pixels.subarray(x*4, pixels.length), ref, imgData.width*4))
-					minX = x;
-				else
-					break;
+				if(gradientCrop) {
+					cropRef = pixels;
+					cropRefWidth = 4;
+					cropRefPitch = pitch;
+				}
+
+				for(var x=0; x<imgData.width; ++x) {
+					if(gradientCrop && allowDeviation && x > 0)
+						cropRef = pixels.subarray((x-1)*4, pixels.length);
+					if(isFilled(pixels.subarray(x*4, pixels.length), cropRef, pitch, cropRefWidth, cropRefPitch))
+						maxX = x;
+					else
+						break;
+				}
+
+				if(gradientCrop) {
+					cropRef = pixels.subarray((imgData.height-1)*pitch, pixels.length);
+					cropRefWidth = imgData.width*4;
+					cropRefPitch = 0;
+				}
+
+				offset = imgData.width*imgData.height*4;
+				for(var y=imgData.height-1; y>=0; --y) {
+					if(gradientCrop && allowDeviation && y < imgData.height-1)
+						cropRef = pixels.subarray((y+1)*pitch, pixels.length);
+					offset -= pitch;
+					if(isFilled(pixels.subarray(offset, offset+pitch), cropRef, pitch, cropRefWidth, cropRefPitch))
+						minY = y;
+					else
+						break;
+				}
+
+				if(gradientCrop) {
+					cropRef = pixels.subarray((imgData.width-1)*4, pixels.length);
+					cropRefWidth = 4;
+					cropRefPitch = pitch;
+				}
+
+				for(var x=imgData.width-1; x>=0; --x) {
+					if(gradientCrop && allowDeviation && x < imgData.width-1)
+						cropRef = pixels.subarray((x+1)*4, pixels.length);
+					if(isFilled(pixels.subarray(x*4, pixels.length), cropRef, pitch, cropRefWidth, cropRefPitch))
+						minX = x;
+					else
+						break;
+				}
+
+				if(gradientCrop) {
+					// gradient crop always crops aways a 1 pixel border,
+					// because it compares the row/column to itself
+					// if this is all we crop, we don't crop
+					if(minX == imgData.width-1)
+						++minX;
+					if(minY == imgData.height-1)
+						++minY;
+					if(maxX == 0)
+						--maxX;
+					if(maxY == 0)
+						--maxY;
+				}
 			}
 
 			++maxX;
 			++maxY;
-			var bw = +borderWidth.value;
+			var bw = +c.borderWidth.value;
 			var lumWeights = [ 0.299, 0.587, 0.114 ].map(e => e/(255*255));
 			var brightAtBorder = Math.sqrt(lumWeights.reduce((sum, weight, index) => sum + weight*ref[index]*ref[index], 0)) > 0.5;
 			if(brightAtBorder)
@@ -378,7 +469,7 @@ function isDraggingImage(e) {
 }
 
 window.addEventListener("DOMContentLoaded", function() {
-	background.addEventListener("change", generate);
+	c.background.addEventListener("change", generate);
 	viewTemplate = document.querySelector(".view");
 	viewTemplate.parentNode.removeChild(viewTemplate);
 	document.body.addEventListener("dragover", function(e) {
@@ -410,10 +501,25 @@ window.addEventListener("DOMContentLoaded", function() {
 		this.classList.remove("dragOver");
 	}, false);
 });
-var offset = 1;
-var offsetExp = Math.exp(offset);
-var scale = (Math.log(64+offsetExp)-offset)/512;
-bindValues(document.querySelector("#borderWidth"), document.querySelector("#borderWidthRange"),
-	e => Math.round((Math.log(+e+offsetExp)-offset)/scale));
-bindValues(document.querySelector("#borderWidthRange"), document.querySelector("#borderWidth"),
-	e => Math.round(Math.exp(+e*scale+offset)-offsetExp));
+
+function exponentialSlider(expOffset, maxValue, range, numeric) {
+	var offset = Math.exp(expOffset);
+	var scale = (Math.log(maxValue+offset)-expOffset)/+range.max;
+	bindValues(numeric, range,
+		e => Math.round((Math.log(+e+offset)-expOffset)/scale));
+	bindValues(range, numeric,
+		e => Math.round(Math.exp(+e*scale+expOffset)-offset));
+}
+
+exponentialSlider(1, 64, c.borderWidthRange, c.borderWidth);
+exponentialSlider(1, 255, c.differenceDeltaRange, c.differenceDelta);
+
+function syncDeviation() {
+	c.allowDeviation.disabled = !c.gradientCrop.checked && (+c.differenceDelta.value === 0);
+}
+
+c.gradientCrop.addEventListener("input", syncDeviation);
+c.differenceDelta.addEventListener("input", syncDeviation);
+c.differenceDeltaRange.addEventListener("input", syncDeviation);
+
+syncDeviation();

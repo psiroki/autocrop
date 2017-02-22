@@ -6,18 +6,22 @@
 <link rel="stylesheet" type="text/css" href="autocrop.css"/>
 </head>
 <body>
-<input type="file" id="background" accept="image/*"/>
-<label><input type="checkbox" id="disableCrop"/> Don't crop just yet</label>
-<span class="borderPanel"><span>Add border of <input type="number"
-id="borderWidth" value="0"/> pixels on each side</span><span class="rangeBlock">
-<input type="range" id="borderWidthRange" value="0" min="0" max="512"/>
-</span></span>
+<span class="verticalPanel"><span><input type="file" id="background" accept="image/*"/></span>
+<label><input type="checkbox" id="disableCrop"/> Don't crop just yet</label></span>
+<span class="verticalPanel"><label><input type="checkbox" id="gradientCrop"/> Gradient crop</label>
+<label><input type="checkbox" id="allowDeviation"/> Allow deviation</label></span>
+<span class="verticalPanel combinedValuePanel"><span>Add border of <input type="number"
+id="borderWidth" value="0"/> pixels on each side</span><span class="rangeBlock"
+><input type="range" id="borderWidthRange" value="0" min="0" max="512"
+/></span></span>
+<span class="verticalPanel combinedValuePanel"><span>Allow difference of <input type="number"
+id="differenceDelta" value="0"/> in the pixel values</span><span class="rangeBlock"
+><input type="range" id="differenceDeltaRange" value="0" min="0" max="255"
+/></span></span>
 <div style="display: none">
 <div class="view">
 	<div class="card">
-		<div class="canvasHolder">
-			<span class="canvasFrame"></span>
-		</div>
+		<div class="canvasHolder"><span class="canvasFrame"></span></div>
 		<div class="snackBar">
 			<button type="button" class="recropButton">Recrop</button>
 			<button type="button" class="savePngButton">Save as PNG</button>
