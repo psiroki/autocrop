@@ -60,6 +60,56 @@ body {
 	vertical-align: top;
 }
 
+.canvasParent {
+	position: relative;
+	display: inline-block;
+}
+
+.canvasParent .highlightCanvas {
+	pointer-events: none;
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
+.card .canvasHolder:hover .horizontalAxis,
+.card .canvasHolder:hover .verticalAxis {
+	display: block;
+}
+
+.horizontalAxis, .verticalAxis {
+	position: absolute;
+	pointer-events: none;
+	z-index: 1;
+	display: none;
+}
+
+.horizontalAxis {
+	left: 0px;
+	right: 0px;
+}
+
+.verticalAxis {
+	top: 0px;
+	bottom: 0px;
+}
+
+.horizontalAnts {
+	background: linear-gradient(to right, #888, #888 33%, rgba(136, 136, 136, 0) 33%, rgba(136, 136, 136, 0) 66%,
+		transparent 66%, transparent) 0px 0px repeat;
+	background-size: 16px 1px;
+	animation: diagonalMarch 1s infinite linear;
+	height: 1px;
+}
+
+.verticalAnts {
+	background: linear-gradient(to bottom, #888, #888 33%, rgba(136, 136, 136, 0) 33%, rgba(136, 136, 136, 0) 66%,
+		transparent 66%, transparent) 0px 0px repeat;
+	background-size: 1px 16px;
+	animation: diagonalMarch 1s infinite linear;
+	width: 1px;
+}
+
 .card .canvasHolder .canvasFrame {
 	pointer-events: none;
 	position: absolute;
@@ -86,6 +136,15 @@ body {
 	to { background-position: 16px 0%, -16px 100%, 0% -16px, 100% 16px; }
 }
 
+@keyframes diagonalMarch {
+	from { background-position: 0px 0px; }
+	to { background-position: 16px 16px; }
+}
+
+.hideCursor {
+	cursor: none;
+}
+
 .dragOver {
 	box-shadow: 0px 0px 32px #888 inset;
 	background: url(dropText.jpg) 50% 32% no-repeat;
@@ -99,6 +158,7 @@ body {
 .snackBar {
 	overflow: hidden;
 	clear: both;
+	padding: 3px 0;
 }
 
 .snackBar > * {
@@ -190,4 +250,21 @@ input[type=text], input[type=number], input[type=password] {
 	border-radius: 3px;
 	border: 1px solid #ddd;
 	padding: 2px 4px;
+}
+
+button .selectedIcon {
+	display: none;
+}
+
+button.checked .selectedIcon, button:active .selectedIcon {
+	display: inline-block;
+}
+
+button .normalIcon {
+	display: inline-block;
+}
+
+button:active .normalIcon,
+button.checked .normalIcon {
+	display: none;
 }
