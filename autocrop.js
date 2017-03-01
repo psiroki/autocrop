@@ -676,7 +676,7 @@ function generate(f, exif) {
 			return;
 		}
 		document.body.classList.add("busy");
-		var fn = f.name.replace(/^(?:.*[\\\/])?([^\\\/]+)\.[^.]+$/, "$1");
+		var fn = (f.name || "pastedImage").replace(/^(?:.*[\\\/])?([^\\\/]+)\.[^.]+$/, "$1");
 		var img = new Image();
 
 		var cropImage = function(img) {
@@ -1151,5 +1151,16 @@ c.gradientCrop.addEventListener("input", syncDeviation);
 c.gradientCrop.addEventListener("change", syncDeviation);
 c.differenceDelta.addEventListener("input", syncDeviation);
 c.differenceDeltaRange.addEventListener("input", syncDeviation);
+
+document.addEventListener("paste", function(event) {
+	for(var item of event.clipboardData.items) {
+		if(item.kind == "file" && isImageMime(item.type)) {
+			generate(item.getAsFile());
+		} else {
+			console.log("Don't know what to do with this:", item.kind, item.type);
+		}
+
+	}
+});
 
 syncDeviation();
