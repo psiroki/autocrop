@@ -6,7 +6,7 @@
 <link rel="stylesheet" type="text/css" href="autocrop.css"/>
 </head>
 <body><div class="settingsPanel"><div class="client">
-<span class="verticalPanel"><span><input type="file" id="background" accept="image/*"/></span>
+<span class="verticalPanel"><span><input type="file" id="background" multiple="multiple" accept="image/*"/></span>
 <label><input type="checkbox" id="disableCrop"/> Don't crop just yet</label></span>
 <span class="verticalPanel"><label><input type="checkbox" id="gradientCrop"/> Gradient crop</label>
 <label><input type="checkbox" id="allowDeviation"/> Allow deviation</label></span>
@@ -36,15 +36,23 @@ id="differenceDelta" value="0"/> in the pixel values</span><span class="rangeBlo
 			/></button>
 			<button type="button" class="recropButton">Recrop</button>
 			<button type="button" class="savePngButton">Save as PNG</button>
-			<button type="button" class="saveJpgButton">Save as JPG</button>
+			<span class="section"><button type="button" class="saveJpgButton">Save as JPG</button>
 			<output class="jpgQualityNum" data-prefix="Q: "></output>
-			<input type="range" class="jpgQuality" value="70"/>
+			<input type="range" class="jpgQuality" value="70"/></span>
 			<button type="button" class="closeButton">Close</button>
 		</div>
 	</div>
 </div>
 </div>
 <div id="insertionPoint"></div>
+<div id="tips">
+	Load an image by <ul>
+		<li>selecting an image with the file picker in the top left corner</li>
+		<li>dropping a file on this page</li>
+		<li>pasting an image file on this page</li>
+		<li>pasting image content on this page</li>
+	</ul>
+</div>
 <script type="application/javascript" src="autocrop.js"></script>
 </body>
 </html>

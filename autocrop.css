@@ -2,12 +2,20 @@ html, body {
 	min-height: 100vh;
 	margin: 0;
 	box-sizing: border-box;
-	font-size: 9pt;
+	font-size: 11px;
 	font-family: 'San Francisco', 'Helvetica Neue', Tahoma, sans-serif;
 }
 
 #insertionPoint {
 	height: 56px;
+}
+
+.checkerBackground, .canvasParent {
+	background-color: #fff;
+	background-image: linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee),
+		linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee);
+	background-size: 16px 16px;
+	background-position: 0 0, 8px 8px;
 }
 
 .settingsPanel {
@@ -127,6 +135,10 @@ body {
 	border-radius: 2px;
 }
 
+.card .canvasHolder:hover .canvasParent {
+	animation: diagonalMarch 1s infinite linear;
+}
+
 .card .canvasHolder:hover .canvasFrame, .card .canvasHolder:active .canvasFrame {
 	animation: march 1s infinite linear;
 }
@@ -137,8 +149,8 @@ body {
 }
 
 @keyframes diagonalMarch {
-	from { background-position: 0px 0px; }
-	to { background-position: 16px 16px; }
+	from { background-position: 0px 0px, 8px 8px; }
+	to { background-position: 16px 16px, 24px 24px; }
 }
 
 .hideCursor {
@@ -158,10 +170,23 @@ body {
 .snackBar {
 	overflow: hidden;
 	clear: both;
-	padding: 3px 0;
+	padding: 5px 0;
 }
 
 .snackBar > * {
+	float: left;
+	margin-right: 4px;
+}
+
+.snackBar > .section {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	margin: -5px 0;
+	padding: 4px 6px;
+	box-shadow: inset 0px 1px 3px rgba(0,0,0,0.05);
+}
+
+.snackBar > .section > * {
 	float: left;
 	margin-right: 4px;
 }
@@ -208,6 +233,8 @@ button {
 	line-height: 15px;
 	color: black;
 	vertical-align: middle;
+	font-size: 11px;
+	font-family: 'San Francisco', 'Helvetica Neue', Tahoma, sans-serif;
 }
 
 button.left {
@@ -267,4 +294,18 @@ button .normalIcon {
 button:active .normalIcon,
 button.checked .normalIcon {
 	display: none;
+}
+
+.loaded #tips {
+	display: none;
+}
+
+#tips {
+	pointer-events: none;
+	z-index: -1;
+	position: fixed;
+	right: 24px;
+	bottom: 8px;
+	color: #ccc;
+	font-size: 24px;
 }

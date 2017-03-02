@@ -3,26 +3,28 @@ var exif = null;
 try {
 	exif = new Worker("exifWorker.js");
 } catch(e) {
+	console.warn("The exifWorker could not be loaded, JPEG files might appear in a funny orientation", e);
 }
 var viewTemplate = null;
-var jobs = [];
 
 var calls = { };
 var callCounter = 0;
 
 var c = { };
 
-function getChannelOrder() {
-	var c = document.createElement("canvas");
-	var ctx = c.getContext("2d");
+var gpu = (function() {
+	var testCanvas = document.createElement("canvas");
+	testCanvas.width = 1;
+	testCanvas.height = 1;
+	var ctx = testCanvas.getContext("2d");
 	ctx.fillStyle = "rgba(10, 20, 30, 1)";
 	ctx.fillRect(0, 0, 1, 1);
 	var arr = ctx.getImageData(0, 0, 1, 1).data;
 	var values = [10, 20, 30, 255];
 	var channels = [];
 	var bitOffsets = [];
-	var uint32Value = new Uint32Array(arr.buffer);
-	uint32Value = uint32Value[0];
+	var uint32Buffer = new Uint32Array(arr.buffer);
+	var uint32Value = uint32Buffer[0];
 	for(var val of values) {
 		var channel = -1;
 		var minDiff = 256;
@@ -47,9 +49,7 @@ function getChannelOrder() {
 		channels: channels,
 		bitOffsets: bitOffsets
 	};
-}
-
-var gpu = getChannelOrder();
+})();
 
 function collect(ids) {
 	if (!(ids instanceof Array))
@@ -68,8 +68,8 @@ collect("background", "disableCrop",
 if(exif) {
 	exif.onmessage = function(e) {
 		var id = e.data.id;
-		var cb = calls[e.data.id];
-		delete calls[e.data.id];
+		var cb = calls[id];
+		delete calls[id];
 		if(cb)
 			cb(e.data.exif);
 	}
@@ -115,18 +115,21 @@ function enclose(img, size) {
 	return { w: w, h: h };
 }
 
-function dataURLToBlob(dataURL) {
-	var BASE64_MARKER = ';base64,';
-	if (dataURL.indexOf(BASE64_MARKER) == -1) {
-		var parts = dataURL.split(',');
-		var contentType = parts[0].split(':')[1];
-		var raw = decodeURIComponent(parts[1]);
+const BASE64_MARKER = ";base64,";
 
-		return new Blob([raw], {type: contentType});
-	}
+function uriEncodedDataURLToBlob(dataURL) {
+	var parts = dataURL.split(',');
+	var colon = parts[0].indexOf(':');
+	var contentType = parts[0].substring(colon+1);
+	var raw = decodeURIComponent(parts[1]);
 
+	return new Blob([raw], {type: contentType});
+}
+
+function base64EncodedDataURLToBlob(dataURL) {
 	var parts = dataURL.split(BASE64_MARKER);
-	var contentType = parts[0].split(':')[1];
+	var colon = parts[0].indexOf(':');
+	var contentType = parts[0].substring(colon+1);
 	var raw = window.atob(parts[1]);
 	var rawLength = raw.length;
 
@@ -137,6 +140,13 @@ function dataURLToBlob(dataURL) {
 	}
 
 	return new Blob([uInt8Array], {type: contentType});
+}
+
+function dataURLToBlob(dataURL) {
+	if (dataURL.indexOf(BASE64_MARKER) == -1)
+		return uriEncodedDataURLToBlob(dataURL);
+	else
+		return base64EncodedDataURLToBlob(dataURL);
 }
 
 function scaleImage(img, tw, th) {
@@ -166,8 +176,8 @@ function scaleImage(img, tw, th) {
 		var txc = 0;
 		for(var sx=0; sx<sw; ++sx) {
 			++sampleCount[tx];
-			for(var c=0; c<4; ++c)
-				targetLine[4*tx+c] += source[srcLine+sx*4+c];
+			for(var ch=0; ch<4; ++ch)
+				targetLine[4*tx+ch] += source[srcLine+sx*4+ch];
 			txc += tw;
 			if(txc >= sw) {
 				txc -= sw;
@@ -177,15 +187,15 @@ function scaleImage(img, tw, th) {
 		srcLine += sw*4;
 		tyc += th;
 		if(tyc >= sh) {
-			for(var tx=0; tx<tw; ++tx) {
-				for(var c=0; c<4; ++c) {
-					target[trgLine+tx*4+c] = targetLine[tx*4+c]/sampleCount[tx];
+			for(let tx=0; tx<tw; ++tx) {
+				for(var ch=0; c<4; ++ch) {
+					target[trgLine+tx*4+ch] = targetLine[tx*4+ch]/sampleCount[tx];
 				}
 			}
 
-			for(var tx=0; tx<tw; ++tx) {
-				for(var c=0; c<4; ++c) {
-					targetLine[tx*4+c] = 0;
+			for(let tx=0; tx<tw; ++tx) {
+				for(var ch=0; ch<4; ++ch) {
+					targetLine[tx*4+ch] = 0;
 				}
 				sampleCount[tx] = 0;
 			}
@@ -422,8 +432,8 @@ Mask.prototype = {
 		this.imageData = this.sourceContext.getImageData(0, 0, this.width, this.height);
 		this.imageDataView = new Uint32Array(this.imageData.data.buffer);
 	},
-	_handlePixelTest(pixelTest) {
-		var sourcePixel = pixelTest === null ? this.imageDataView[offset] : pixelTest;
+	_handlePixelTest(pixelTest, offsetOpt) {
+		var sourcePixel = pixelTest === null ? this.imageDataView[offsetOpt] : pixelTest;
 		return (pixel) => pixel === sourcePixel;
 	},
 	_addPixelSpan(startX, endX, y) {
@@ -530,7 +540,7 @@ Mask.prototype = {
 			return;
 		var offset = this.maskBuffer.offset(x, y);
 		if(typeof pixelTest !== "function")
-			pixelTest = this._handlePixelTest(pixelTest);
+			pixelTest = this._handlePixelTest(pixelTest, offset);
 		if(this.maskBuffer.getAlphaAtOffset(offset) > 0 || !pixelTest(this.imageDataView[offset]))
 			return;
 		var startOffset = offset;
@@ -655,16 +665,10 @@ function mix(a, b, f) {
 		((a>>>24&0xff)*fi+f*(b>>>24&0xff))<<24;
 }
 
-function createFill(canvas, x, y, pixelTest) {
-	var mask = new Mask(canvas);
-	mask.fill(x, y, pixelTest);
-	return mask;
-}
-
 function generate(f, exif) {
 	if(this === c.background && c.background.files.length > 0) {
-		var bgf = c.background.files[0];
-		return generate(bgf);
+		for(var bgf of Array.from(c.background.files))
+			generate(bgf);
 	}
 
 	if(f instanceof Blob) {
@@ -689,7 +693,6 @@ function generate(f, exif) {
 				h = s.w;
 			}
 			var canvas = document.createElement("canvas");
-			var maxDim = Math.max(w, h);
 			canvas.width = w;
 			canvas.height = h;
 			var panel = viewTemplate.cloneNode(true);
@@ -700,8 +703,7 @@ function generate(f, exif) {
 			var tool = null;
 			var tools = [new Tool("eraser", function(doSelect) {
 				if(doSelect) {
-					function createAxis(orientation) {
-						var h = orientation == "horizontal";
+					var createAxis = (orientation) => {
 						var axis = document.createElement("span");
 						axis.classList.add(orientation+"Ants");
 						axis.classList.add(orientation+"Axis");
@@ -803,10 +805,10 @@ function generate(f, exif) {
 			}
 
 			canvasParent.appendChild(canvas);
-			if(!insertionPoint || !insertionPoint.parentNode)
+			if(!c.insertionPoint || !c.insertionPoint.parentNode)
 				document.body.appendChild(panel);
 			else
-				insertionPoint.parentNode.insertBefore(panel, insertionPoint.nextSibling);
+				c.insertionPoint.parentNode.insertBefore(panel, c.insertionPoint.nextSibling);
 			var ctx = canvas.getContext("2d");
 			ctx.save();
 			if(o >= 1) {
@@ -1155,11 +1157,12 @@ c.differenceDeltaRange.addEventListener("input", syncDeviation);
 document.addEventListener("paste", function(event) {
 	for(var item of event.clipboardData.items) {
 		if(item.kind == "file" && isImageMime(item.type)) {
+			if(item.name)
+				console.log("Found a file: ", item.name);
 			generate(item.getAsFile());
 		} else {
 			console.log("Don't know what to do with this:", item.kind, item.type);
 		}
-
 	}
 });
 
