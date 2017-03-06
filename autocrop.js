@@ -1058,6 +1058,7 @@ function saveAsPNG(canvas, filename) {
 }
 
 function save(canvas, filename, format, quality) {
+	var forceDataPopup = /\biPad\b|\biPhone\b|\biPod\b/g.test(window.navigator.userAgent);
 	function handleBlob(blob) {
 		var blobUrl = DOMURL.createObjectURL(blob);
 		var a = document.createElement("a");
@@ -1067,7 +1068,7 @@ function save(canvas, filename, format, quality) {
 		DOMURL.revokeObjectURL(blobUrl);
 	}
 
-	if(typeof canvas.toBlob === "function") {
+	if(!forceDataPopup && typeof canvas.toBlob === "function") {
 		try {
 			canvas.toBlob(handleBlob, format, quality);
 			return;
@@ -1076,8 +1077,12 @@ function save(canvas, filename, format, quality) {
 		}
 	}
 	var canvasDataUrl = canvas.toDataURL(format, quality);
-	var blob = dataURLToBlob(canvasDataUrl);
-	handleBlob(blob);
+	if(forceDataPopup) {
+		window.open(canvasDataUrl);
+	} else {
+		var blob = dataURLToBlob(canvasDataUrl);
+		handleBlob(blob);
+	}
 }
 
 function isImageMime(s) {
