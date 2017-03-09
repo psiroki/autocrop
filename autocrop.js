@@ -797,6 +797,7 @@ function generate(f, exif) {
 			})];
 
 			function syncTool() {
+				ownBar.classList.toggle("toolSelected", !!tool);
 				tools.forEach(function(t) {
 					Array.from(ownBar.querySelectorAll(t.getButtonSelector())).forEach(e => {
 						e.classList.toggle("checked", t === tool);
@@ -1031,7 +1032,7 @@ function generate(f, exif) {
 				saveAsPNG(canvas, fn);
 			});
 			bindBarButton(".closeButton", function() {
-				if(panel.parentNode) {
+				if(tool === null && panel.parentNode) {
 					panel.parentNode.removeChild(panel);
 				}
 			});
