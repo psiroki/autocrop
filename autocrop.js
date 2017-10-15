@@ -498,7 +498,7 @@ Mask.prototype = {
 			this.rectangle[3] = y+1;
 	},
 	isSelected(x, y) {
-		if(x < 0 || x >= w || y < 0 || y >= this.height)
+		if(x < 0 || x >= this.width || y < 0 || y >= this.height)
 			return false;
 		var offset = this.maskBuffer.offset(x, y);
 		return this.maskBuffer.getAlphaAtOffset(offset) > 0;
